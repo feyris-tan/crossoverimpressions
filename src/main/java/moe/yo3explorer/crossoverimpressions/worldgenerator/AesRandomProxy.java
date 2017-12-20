@@ -74,12 +74,17 @@ public class AesRandomProxy extends Random
     public int nextInt() {
         byte[] data = cipher.update(new byte[4]);
         int result = ByteBuffer.wrap(data).getInt(0);
+        if (result < 0) result /= -1;
         return result;
     }
 
     @Override
     public int nextInt(int bound) {
-        throw new NotImplementedException();
+        if (bound < 0)
+            throw new IllegalArgumentException("bound must be positive.");
+
+        int temp = nextInt();
+        return temp % bound;
     }
 
     @Override
