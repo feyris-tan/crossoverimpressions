@@ -23,7 +23,10 @@ import java.util.stream.LongStream;
  */
 public class AesRandomProxy extends Random
 {
-    public AesRandomProxy(byte[] key) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException {
+    private final static String ALGORITHM = "AES/CTR/NoPadding";
+
+    public AesRandomProxy(byte[] key)
+    {
         byte[] finalKey = new byte[16];
         System.arraycopy(key,0,finalKey,0,Math.min(16,key.length));
 
@@ -31,12 +34,25 @@ public class AesRandomProxy extends Random
         byte[] nonce = ByteBuffer.allocate(16).putInt(adler).array();
         IvParameterSpec ips = new IvParameterSpec(nonce);
 
-        SecretKeySpec sks = new SecretKeySpec(finalKey,"AES");
-        cipher = Cipher.getInstance("AES/CTR/NoPadding");
-        cipher.init(Cipher.ENCRYPT_MODE,sks,ips);
+        try {
+            SecretKeySpec sks = new SecretKeySpec(finalKey, "AES");
+
+            cipher = Cipher.getInstance(ALGORITHM);
+            cipher.init(Cipher.ENCRYPT_MODE, sks, ips);
+        }
+        catch (NoSuchAlgorithmException nsae)
+        {
+            throw new WorldGeneratorException("The current JVM does not support " + ALGORITHM + ".",nsae);
+        } catch (NoSuchPaddingException e) {
+            throw new WorldGeneratorException("The current JVM does not support unpadded Ciphers.",e);
+        } catch (InvalidAlgorithmParameterException e) {
+            throw new WorldGeneratorException("The current JVMs implementation does not support the required Cipher parameters.",e);
+        } catch (InvalidKeyException e) {
+            throw new WorldGeneratorException("The current JVMs does not support keys of size " + finalKey.length,e);
+        }
     }
 
-    public AesRandomProxy(String key) throws InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException, UnsupportedEncodingException, InvalidAlgorithmParameterException {
+    public AesRandomProxy(String key) throws UnsupportedEncodingException {
         this(key.getBytes("utf-8"));
     }
 
@@ -48,7 +64,8 @@ public class AesRandomProxy extends Random
         throw new NotImplementedException();
     }
 
-    public AesRandomProxy(long seed) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException {
+    public AesRandomProxy(long seed)
+    {
         this(ByteBuffer.allocate(8).putLong(seed).array());
     }
 

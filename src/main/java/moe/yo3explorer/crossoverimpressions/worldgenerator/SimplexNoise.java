@@ -35,26 +35,30 @@ public class SimplexNoise {  // Simplex noise in 2D, 3D and 4D
         init();
     }
 
-    public SimplexNoise(String seed) throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, NoSuchPaddingException, InvalidKeyException, UnsupportedEncodingException {
-        setDefaultP();
-        AesRandomProxy rng = new AesRandomProxy(seed);
-        int pSize = p.length;
-        short l, r, swap;
-        for (int i = 0; i < p.length; i++)
-        {
-            l = 0;
-            r = 0;
-            while (l == r)
-            {
-                l = (short)rng.nextInt(pSize);
-                r = (short)rng.nextInt(pSize);
-            }
+    public SimplexNoise(String seed) {
+        try {
+            setDefaultP();
+            AesRandomProxy rng = new AesRandomProxy(seed);
+            int pSize = p.length;
+            short l, r, swap;
+            for (int i = 0; i < p.length; i++) {
+                l = 0;
+                r = 0;
+                while (l == r) {
+                    l = (short) rng.nextInt(pSize);
+                    r = (short) rng.nextInt(pSize);
+                }
 
-            swap = p[l];
-            p[l] = p[r];
-            p[r] = swap;
+                swap = p[l];
+                p[l] = p[r];
+                p[r] = swap;
+            }
+            init();
         }
-        init();
+        catch (UnsupportedEncodingException uee)
+        {
+            throw new WorldGeneratorException("The current JVM does not support UTF-8.",uee);
+        }
     }
 
     public SimplexNoise(short[] preloaded)
